@@ -1,0 +1,41 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract project ZIP
+        run: |
+          mkdir project
+          unzip -o Sindh-University-Entry-Test-Preparation.zip -d project
+          find project -name pubspec.yaml
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Prepare project
+        run: |
+          cd project
+          PROJECT_DIR=$(dirname "$(find . -name pubspec.yaml | head -n 1)")
+          cd "$PROJECT_DIR"
+          flutter create --platforms=android .
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sindh-University-Entry-Test-APK
+          path: project/**/build/app/outputs/flutter-apk/app-release.apk
