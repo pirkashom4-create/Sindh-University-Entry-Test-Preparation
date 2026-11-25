@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,28 +17,54 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract project ZIP
+      - name: Extract Design Upgrade ZIP
         run: |
-          mkdir project
-          unzip -o Sindh-University-Entry-Test-Preparation-NEXT.zip -d project
-          find project -name pubspec.yaml
+          mkdir -p extracted project
+          unzip -o Sindh-University-Entry-Test-Preparation-Design-Upgrade.zip -d extracted
+
+          PUBSPEC=$(find extracted -name pubspec.yaml -print -quit)
+
+          if [ -z "$PUBSPEC" ]; then
+            echo "ERROR: pubspec.yaml not found in ZIP"
+            exit 1
+          fi
+
+          SOURCE_DIR=$(dirname "$PUBSPEC")
+          cp -a "$SOURCE_DIR"/. project/
+
+          test -f project/lib/main.dart
+          test -f project/tool/configure_android.py
+          test -f project/google-services.json
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
-      - name: Prepare project
+      - name: Generate Android project
+        working-directory: project
         run: |
-          cd project
-          PROJECT_DIR=$(dirname "$(find . -name pubspec.yaml | head -n 1)")
-          cd "$PROJECT_DIR"
-          flutter create --platforms=android .
-          flutter pub get
-          flutter build apk --release
+          flutter create . --platforms=android --org com.sindhuniversity --project-name entrytest
+
+      - name: Configure Firebase
+        working-directory: project
+        run: python3 tool/configure_android.py
+
+      - name: Install dependencies
+        working-directory: project
+        run: flutter pub get
+
+      - name: Generate App Icon
+        working-directory: project
+        run: dart run flutter_launcher_icons
+
+      - name: Build Release APK
+        working-directory: project
+        run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Sindh-University-Entry-Test-APK
-          path: project/**/build/app/outputs/flutter-apk/app-release.apk
+          path: project/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
