@@ -17,7 +17,7 @@ jobs:
       - name: Extract project ZIP
         run: |
           mkdir project
-          unzip -o Sindh-University-Entry-Test-Preparation.zip -d project
+          unzip -o Sindh-University-Entry-Test-Preparation-NEXT.zip -d project
           find project -name pubspec.yaml
 
       - name: Set up Flutter
