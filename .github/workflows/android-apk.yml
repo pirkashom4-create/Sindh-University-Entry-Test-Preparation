@@ -20,7 +20,7 @@ jobs:
       - name: Extract Design Upgrade ZIP
         run: |
           mkdir -p extracted project
-          unzip -o Sindh-University-Entry-Test-Preparation-Design-Upgrade.zip -d extracted
+          unzip -o Sindh-University-Entry-Test-Preparation-DIAGNOSTIC-FIX-v2.zip  -d extracted
 
           PUBSPEC=$(find extracted -name pubspec.yaml -print -quit)
 
